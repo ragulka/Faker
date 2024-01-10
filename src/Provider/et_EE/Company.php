@@ -6,11 +6,34 @@ class Company extends \Faker\Provider\Company
 {
     protected static $formats = [
         '{{lastName}} {{companySuffix}}',
-        '{{lastName}} {{businessType}} {{companySuffix}}',
-        '{{companySuffix}} {{lastName}}',
-        '{{companySuffix}} {{lastName}} {{businessType}}',
-        '{{companySuffix}} {{firstName}} {{lastName}} {{businessType}}',
+        '{{lastName}} {{companyNameElement}} {{companySuffix}}',
+        'FIE {{firstName}} {{lastName}}',
+        '{{companySuffix}} {{lastName}} {{companyNameElement}}',
+        '{{companySuffix}} {{firstName}} {{lastName}} {{companyNameElement}}',
     ];
+
+    protected static array $companyNameElements = [
+        'Agentuur', 'Arendus',
+        'Disain',
+        'Grupp',
+        'Haldus', 'Holding', 'Hooldus',
+        'Invest', 'Investeeringud',
+        'Kauplused', 'Kinnistud',
+        'Majutus', 'Marketing', 'Mets', 'Müük',
+        'Paber',
+        'Reklaam', 'Remont',
+        'Teenused',
+        'Tooted', 'Tsement', 'Tööstus', 'Turundus',
+        'Ühing', 'Ühistu',
+        'Valdus', 'Valdused'
+    ];
+
+    protected static $companySuffix = ['AS', 'OÜ', 'MTÜ', 'UÜ', 'TÜ', 'SA'];
+
+    public static function companyNameElement(): string
+    {
+        return static::randomElement(static::$companyNameElements);
+    }
 
     /**
      * @example 'Edasijõudnud 4.põlvkonna adapter'
@@ -133,17 +156,6 @@ class Company extends \Faker\Provider\Company
         ],
     ];
 
-    protected static array $businessType = [
-        'Hooldus', 'Haldus', 'Holding', 'Invest', 'Teenused', 'Kinnistud', 'Mets', "Remont", "Valdused", "Valdus", "Majutus", 'Disain', 'Arendus', 'Tööstus', 'Grupp'
-    ];
-
-    protected static $companySuffix = ['AS', 'OÜ', 'FIE', 'MTÜ', 'UÜ', 'TÜ', 'SA'];
-
-    public static function businessType(): string
-    {
-        return static::randomElement(static::$businessType);
-    }
-
     /**
      * @example 'Robust full-range hub'
      */
@@ -196,7 +208,7 @@ class Company extends \Faker\Provider\Company
      *
      * This is done according to a 7-3-1 algorithm.
      */
-    protected static function calculateModulus731(int|string $number): int
+    protected static function calculateModulus731(string $number): int
     {
         $multipliers = [7, 3, 1];
         $multiplierIndex = 0;
