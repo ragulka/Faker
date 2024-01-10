@@ -2,6 +2,8 @@
 
 namespace Faker\Provider\et_EE;
 
+use DateTime;
+
 class Person extends \Faker\Provider\Person
 {
     /**
@@ -81,4 +83,75 @@ class Person extends \Faker\Provider\Person
         'Uibo', 'Uibo',
         'Vassiljev', 'Vaher', 'Volkov', 'Valk', 'Vaher', 'Vahtra', 'Vaino', 'Vainola', 'Välbe', 'Valdma', 'Väljas', 'Valk', 'Vassiljev', 'Vassiljeva', 'Vesik', 'Veski', 'Viiding', 'Vitsut', 'Võigemast', 'Volkov', 'Volkova', 'Võsu', 'Vassiljeva', 'Vaher', 'Volkova',
     ];
+
+
+    /**
+     * Map associating centuries with gender-digit pairs, used when generating a personal identity number.
+     *
+     * @var array|array[]
+     */
+    protected static array $genderCenturyDigitMap = [
+        18 => ['male' => '1', 'female' => '2'],
+        19 => ['male' => '3', 'female' => '4'],
+        20 => ['male' => '5', 'female' => '6'],
+        21 => ['male' => '7', 'female' => '8']
+    ];
+
+
+    /**
+     * National Personal Identity Number (Isikukood)
+     *
+     * @see https://et.wikipedia.org/wiki/Isikukood
+     *
+     * @param DateTime|null $birthdate
+     * @param string|null $gender Person::GENDER_MALE || Person::GENDER_FEMALE
+     *
+     * @return string using format GDDMMYYZZZQ, where G is the gender-based digit, DDMMYY is the date of birth, ZZZ the sequence number and Q the control character (checksum)
+     */
+    public function personalIdentityNumber(DateTime $birthdate = null, string $gender = null): ?string
+    {
+        // Check if a birthdate is provided, otherwise generate a random one
+        if ($birthdate === null) {
+            $birthdate = \Faker\Provider\DateTime::dateTimeThisCentury();
+        }
+
+        if ($gender === null) {
+            $gender = self::GENDER_MALE;
+        }
+
+        // Determine the century when the person was born
+        $century = intdiv((int) $birthdate->format('Y'), 100);
+
+        // Determine first digit or return null if out of bounds
+        if (empty($firstDigit = static::$genderCenturyDigitMap[$century][$gender] ?? null)) {
+            return null;
+        }
+
+        // Format the birthdate as YYMMDD
+        $birthdateFormatted = $birthdate->format('ymd');
+
+        // Generate a random sequence of 3 digits
+        $sequence = self::randomNumber(3, true);
+
+        // Calculate the checksum
+        $personalIdentityNumber = $firstDigit . $birthdateFormatted . $sequence;
+        $checksum = 0;
+        $multipliers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 1];
+
+        for ($i = 0; $i < 10; $i++) {
+            $checksum += (int) $personalIdentityNumber[$i] * $multipliers[$i];
+        }
+
+        $checksum %= 11;
+
+        if ($checksum === 10) {
+            return static::personalIdentityNumber($birthdate, $gender);
+        }
+
+        // Add the calculated checksum
+        $personalIdentityNumber .= $checksum;
+
+        return $personalIdentityNumber;
+    }
+
 }
